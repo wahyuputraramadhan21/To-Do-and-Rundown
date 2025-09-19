@@ -156,42 +156,25 @@
                 </div>
 
                 <div id="detailed-form-container" class="hidden">
-                    <form id="todo-form" class="mb-6">
-                        <div class="flex items-center justify-center mb-6 gap-6">
-                            <div id="indicator-1" class="step-indicator flex items-center justify-center w-8 h-8 rounded-full border-2 border-blue-500 bg-blue-500 text-white font-bold">1</div>
-                            <div id="indicator-2" class="step-indicator flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-300 dark:border-gray-600 text-slate-400 dark:text-gray-500 font-bold">2</div>
-                            <div id="indicator-3" class="step-indicator flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-300 dark:border-gray-600 text-slate-400 dark:text-gray-500 font-bold">3</div>
+                     <form id="todo-form" class="space-y-3 mb-6">
+                        <input type="text" id="task-input" placeholder="Nama tugas..." class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="number" id="duration-input" placeholder="Durasi (menit)" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
+                            <input type="text" id="category-input" placeholder="Kategori (mis: #Pekerjaan)" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-                        
-                        <div id="form-steps-container">
-                            <div id="step-1" class="form-step space-y-4">
-                                 <h3 class="font-semibold text-center text-lg">Apa tugas utamamu?</h3>
-                                 <input type="text" id="task-input" placeholder="Nama tugas..." class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                 <input type="number" id="duration-input" placeholder="Estimasi durasi (menit)" class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
-                            </div>
-                            <div id="step-2" class="form-step space-y-4 hidden">
-                                <h3 class="font-semibold text-center text-lg">Perlu dijadwalkan? (Opsional)</h3>
-                                <input type="date" id="deadline-date-input" title="Tanggal Deadline" class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <input type="time" id="deadline-time-input" title="Waktu Deadline" class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div id="step-3" class="form-step space-y-4 hidden">
-                                 <h3 class="font-semibold text-center text-lg">Atur & Kategorikan</h3>
-                                 <input type="text" id="category-input" placeholder="Kategori (mis: #Pekerjaan)" class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <select id="priority-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="medium">Prioritas Sedang</option><option value="high">Prioritas Tinggi</option><option value="low">Prioritas Rendah</option>
-                                    </select>
-                                    <select id="repeat-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="none">Tidak Berulang</option><option value="daily">Berulang Harian</option><option value="weekly">Berulang Mingguan</option>
-                                    </select>
-                                 </div>
-                            </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                             <input type="date" id="deadline-date-input" title="Tanggal Deadline (Opsional)" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                             <input type="time" id="deadline-time-input" title="Waktu Deadline (Opsional)" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-                        <div class="flex justify-between items-center pt-2">
-                            <button type="button" id="prev-btn" class="bg-slate-200 dark:bg-gray-600 hover:bg-slate-300 dark:hover:bg-gray-500 font-semibold py-2 px-6 rounded-lg transition-colors hidden">Kembali</button>
-                            <button type="button" id="next-btn" class="ml-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Lanjut</button>
-                            <button type="submit" id="submit-btn" class="ml-auto w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors hidden">Tambah Tugas</button>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                             <select id="priority-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="medium">Prioritas Sedang</option><option value="high">Prioritas Tinggi</option><option value="low">Prioritas Rendah</option>
+                            </select>
+                            <select id="repeat-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="none">Tidak Berulang</option><option value="daily">Berulang Harian</option><option value="weekly">Berulang Mingguan</option>
+                            </select>
                         </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200">Tambah Tugas</button>
                     </form>
                 </div>
 
@@ -237,11 +220,6 @@
         // --- Elemen DOM ---
         const detailedFormContainer = document.getElementById('detailed-form-container');
         const todoForm = document.getElementById('todo-form');
-        const steps = [document.getElementById('step-1'), document.getElementById('step-2'), document.getElementById('step-3')];
-        const indicators = [document.getElementById('indicator-1'), document.getElementById('indicator-2'), document.getElementById('indicator-3')];
-        const nextBtn = document.getElementById('next-btn');
-        const prevBtn = document.getElementById('prev-btn');
-        const submitBtn = document.getElementById('submit-btn');
         const taskInput = document.getElementById('task-input');
         const durationInput = document.getElementById('duration-input');
         const categoryInput = document.getElementById('category-input');
@@ -279,7 +257,6 @@
         const closeNotesModalBtn = document.getElementById('close-notes-modal');
         
         // --- State Aplikasi ---
-        let currentStep = 1;
         let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         let completionHistory = JSON.parse(localStorage.getItem('completionHistory')) || [];
         let categoryFilter = 'all';
@@ -310,11 +287,9 @@
             const duration = quickDurationInput.value;
             const deadlineDate = quickDeadlineInput.value;
             let deadline = null;
-
             if (deadlineDate) {
                 deadline = new Date(`${deadlineDate}T23:59:59`).toISOString();
             }
-
             if (taskText && duration) {
                 addTask(taskText, duration, 'medium', '', 'none', deadline);
                 quickAddForm.reset();
@@ -332,35 +307,6 @@
                 toast.classList.remove('show');
             }, 3000);
         };
-        
-        const showStep = (stepNumber) => {
-            steps.forEach((step, index) => {
-                step.classList.toggle('hidden', (index + 1) !== stepNumber);
-            });
-            indicators.forEach((indicator, index) => {
-                const isCurrent = (index + 1) === stepNumber;
-                const isCompleted = (index + 1) < stepNumber;
-                indicator.classList.toggle('bg-blue-500', isCurrent || isCompleted);
-                indicator.classList.toggle('border-blue-500', isCurrent || isCompleted);
-                indicator.classList.toggle('text-white', isCurrent || isCompleted);
-            });
-            prevBtn.classList.toggle('hidden', stepNumber === 1);
-            nextBtn.classList.toggle('hidden', stepNumber === steps.length);
-            submitBtn.classList.toggle('hidden', stepNumber !== steps.length);
-            currentStep = stepNumber;
-        };
-
-        nextBtn.addEventListener('click', () => {
-            if (currentStep === 1 && (!taskInput.value.trim() || !durationInput.value)) {
-                alert("Nama tugas dan durasi wajib diisi.");
-                return;
-            }
-            if (currentStep < steps.length) showStep(currentStep + 1);
-        });
-
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 1) showStep(currentStep - 1);
-        });
         
         const saveTasks = () => { localStorage.setItem('tasks', JSON.stringify(tasks)); renderAll(); };
         const saveHistory = () => { localStorage.setItem('completionHistory', JSON.stringify(completionHistory)); };
@@ -558,11 +504,19 @@
                 isRundownGenerated = false;
                 return;
             }
-            const tasksWithDeadline = relevantTasks.filter(t => t.deadline);
-            let startTimeValue = tasksWithDeadline.length > 0
-                ? new Date(Math.min(...tasksWithDeadline.map(t => new Date(t.deadline).getTime()))).toTimeString().slice(0, 5)
-                : startTimeInput.value;
+            
+            const isAllDayMarker = (date) => date.getHours() === 23 && date.getMinutes() === 59 && date.getSeconds() === 59;
+            const tasksWithSpecificTime = relevantTasks.filter(t => t.deadline && !isAllDayMarker(new Date(t.deadline)));
+            
+            let startTimeValue;
+            if (tasksWithSpecificTime.length > 0) {
+                const earliestTime = new Date(Math.min(...tasksWithSpecificTime.map(t => new Date(t.deadline).getTime())));
+                startTimeValue = earliestTime.toTimeString().slice(0, 5);
+            } else {
+                startTimeValue = startTimeInput.value;
+            }
             startTimeInput.value = startTimeValue;
+
             if (!startTimeValue) {
                 rundownOutput.innerHTML = '<p class="text-red-400 text-center">Waktu mulai tidak valid.</p>';
                 isRundownGenerated = false;
@@ -693,7 +647,7 @@
         showMotivationalQuote();
         checkRepeatingTasks();
         updateThemeUI(document.documentElement.classList.contains('dark'));
-        // Default to quick form on load
+        // Default to quick form on load, then switch back to detailed form to hide it, then show quick form. This sets up the initial state correctly.
         showDetailedFormBtn.click(); 
         showQuickFormBtn.click();
         renderAll();
