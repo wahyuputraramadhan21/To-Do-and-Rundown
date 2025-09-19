@@ -194,15 +194,21 @@
             </section>
             <section class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
                  <h2 class="text-2xl font-semibold mb-4 border-b border-slate-200 dark:border-gray-700 pb-2">Rundown & Fokus</h2>
-                <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div class="flex flex-wrap items-center gap-4 mb-6">
                     <div class="flex items-center gap-2">
-                         <label for="start-time" class="font-medium">Mulai pukul:</label>
+                         <label for="start-time" class="font-medium">Mulai:</label>
                          <input type="time" id="start-time" value="08:00" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <button id="generate-rundown-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex-grow">Buat Rundown</button>
-                    <button id="generate-image-btn" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg> Unduh Foto
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <label for="break-time" class="font-medium">Jeda:</label>
+                        <input type="number" id="break-time" value="10" min="0" placeholder="mnt" class="w-20 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex-grow flex gap-2">
+                        <button id="generate-rundown-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex-grow">Buat Rundown</button>
+                        <button id="generate-image-btn" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg> Unduh
+                        </button>
+                    </div>
                 </div>
                 <div id="rundown-output" class="space-y-3 overflow-y-auto pr-2" style="max-height: 55vh;">
                      <div class="text-center py-8 px-4 border-2 border-dashed border-slate-300 dark:border-gray-700 rounded-lg">
@@ -247,6 +253,7 @@
         const closeReportModalBtn = document.getElementById('close-report-modal');
         const generateRundownBtn = document.getElementById('generate-rundown-btn');
         const startTimeInput = document.getElementById('start-time');
+        const breakTimeInput = document.getElementById('break-time');
         const progressCircle = document.getElementById('progress-circle');
         const progressText = document.getElementById('progress-text');
         const generateImageBtn = document.getElementById('generate-image-btn');
@@ -259,6 +266,7 @@
         // --- State Aplikasi ---
         let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         let completionHistory = JSON.parse(localStorage.getItem('completionHistory')) || [];
+        let customBreaks = {};
         let categoryFilter = 'all';
         let timeFilter = 'all';
         let isRundownGenerated = false;
@@ -498,6 +506,7 @@
         closeReportModalBtn.addEventListener('click', () => reportModalOverlay.classList.add('hidden'));
 
         const generateRundown = () => {
+            const globalBreakTime = parseInt(breakTimeInput.value) || 0;
             const relevantTasks = getCurrentlyVisibleTasks().filter(task => !task.completed);
             if (relevantTasks.length === 0) {
                 rundownOutput.innerHTML = `<div class="text-center py-8 px-4 border-2 border-dashed border-slate-300 dark:border-gray-700 rounded-lg"><p class="text-slate-500 dark:text-gray-400">Tidak ada tugas untuk dijadwalkan.</p></div>`;
@@ -529,15 +538,43 @@
             let currentTime = new Date();
             currentTime.setHours(startHour, startMinute, 0, 0);
             isRundownGenerated = true;
-            tasksToSchedule.forEach((task) => {
+
+            tasksToSchedule.forEach((task, index) => {
                 const startTime = new Date(currentTime);
                 const endTime = new Date(currentTime.getTime() + task.duration * 60000);
                 const formatTime = (date) => date.toTimeString().slice(0, 5);
                 const rundownItem = document.createElement('div');
-                rundownItem.className = `flex items-center gap-4 bg-slate-100 dark:bg-gray-700/50 p-3 rounded-lg priority-${task.priority}`;
-                rundownItem.innerHTML = `<div class="text-right font-mono text-sm"><p class="text-blue-500 dark:text-blue-300">${formatTime(startTime)}</p><p class="text-slate-500 dark:text-gray-400">${formatTime(endTime)}</p></div><div class="border-l-2 border-slate-300 dark:border-gray-600 pl-4 flex-grow"><p class="font-semibold">${task.text}</p><p class="text-xs text-slate-500 dark:text-gray-400">${task.duration} menit</p></div><div class="flex flex-col sm:flex-row gap-2"><button data-task-id="${task.id}" class="complete-btn-rundown bg-green-600/50 hover:bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Selesai</button><button data-task-id="${task.id}" data-duration="${task.duration}" class="focus-btn bg-blue-600/50 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Fokus</button></div>`;
+                rundownItem.className = `rundown-task-item flex items-center gap-4 bg-slate-100 dark:bg-gray-700/50 p-3 rounded-lg priority-${task.priority}`;
+                rundownItem.innerHTML = `<div class="text-right font-mono text-sm w-16 flex-shrink-0"><p class="text-blue-500 dark:text-blue-300">${formatTime(startTime)}</p><p class="text-slate-500 dark:text-gray-400">${formatTime(endTime)}</p></div><div class="border-l-2 border-slate-300 dark:border-gray-600 pl-4 flex-grow"><p class="font-semibold">${task.text}</p><p class="text-xs text-slate-500 dark:text-gray-400">${task.duration} menit</p></div><div class="flex flex-col sm:flex-row gap-2"><button data-task-id="${task.id}" class="complete-btn-rundown bg-green-600/50 hover:bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Selesai</button><button data-task-id="${task.id}" data-duration="${task.duration}" class="focus-btn bg-blue-600/50 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Fokus</button></div>`;
                 rundownOutput.appendChild(rundownItem);
+                
                 currentTime = endTime;
+                
+                if (index < tasksToSchedule.length - 1) {
+                    const breakDuration = customBreaks[task.id] ?? globalBreakTime;
+                    if (breakDuration > 0) {
+                        const breakStartTime = new Date(currentTime);
+                        currentTime = new Date(currentTime.getTime() + breakDuration * 60000);
+                        
+                        const breakItem = document.createElement('div');
+                        breakItem.className = 'break-item flex items-center gap-4 text-slate-500 dark:text-gray-500 text-xs py-1';
+                        breakItem.innerHTML = `
+                            <div class="w-16 text-right font-mono">${breakStartTime.toTimeString().slice(0, 5)}</div>
+                            <div class="flex-grow flex items-center justify-between gap-2 border-l-2 border-slate-300 dark:border-gray-700 border-dashed pl-4">
+                                <div class="break-display flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-4 0v-3H2v3h2z"/></svg>
+                                    <span>Jeda (${breakDuration} menit)</span>
+                                </div>
+                                <div class="break-edit hidden flex items-center gap-2">
+                                    <input type="number" value="${breakDuration}" class="w-16 bg-slate-200 dark:bg-gray-600 rounded p-1 text-center">
+                                    <button class="save-break-btn bg-green-500 text-white px-2 py-0.5 rounded text-xs" data-task-id-before="${task.id}">Simpan</button>
+                                </div>
+                                <button class="edit-break-btn text-blue-500 hover:underline" data-task-id-before="${task.id}">Edit</button>
+                            </div>
+                        `;
+                        rundownOutput.appendChild(breakItem);
+                    }
+                }
             });
         };
 
@@ -573,12 +610,19 @@
             const imageContainer = document.getElementById('rundown-for-image');
             const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             let imageHTML = `<h2 class="text-3xl font-bold text-center text-blue-300 mb-2">Rundown Hari Ini</h2><p class="text-center text-gray-400 mb-6">${date}</p>`;
-            rundownOutput.querySelectorAll('.flex.items-center.gap-4').forEach(item => {
-                const timeEl = item.querySelector('.text-right').cloneNode(true);
-                const taskEl = item.querySelector('.border-l-2').cloneNode(true);
-                const priorityClass = item.className.match(/priority-\w+/)[0];
-                imageHTML += `<div class="rundown-item-image ${priorityClass}"><div style="font-family: 'Inter', monospace; text-align: right; font-size: 0.875rem;"><p style="color: #93c5fd;">${timeEl.children[0].textContent}</p><p style="color: #9ca3af;">${timeEl.children[1].textContent}</p></div><div style="border-left: 2px solid #4b5563; padding-left: 1rem; flex-grow: 1;"><p style="font-weight: 600;">${taskEl.children[0].textContent}</p><p style="font-size: 0.75rem; color: #9ca3af;">${taskEl.children[1].textContent}</p></div></div>`;
+            
+            Array.from(rundownOutput.children).forEach(item => {
+                if(item.classList.contains('rundown-task-item')) {
+                    const timeEl = item.querySelector('.text-right').cloneNode(true);
+                    const taskEl = item.querySelector('.border-l-2').cloneNode(true);
+                    const priorityClass = item.className.match(/priority-\w+/)[0];
+                    imageHTML += `<div class="rundown-item-image ${priorityClass}"><div style="font-family: 'Inter', monospace; text-align: right; font-size: 0.875rem;"><p style="color: #93c5fd;">${timeEl.children[0].textContent}</p><p style="color: #9ca3af;">${timeEl.children[1].textContent}</p></div><div style="border-left: 2px solid #4b5563; padding-left: 1rem; flex-grow: 1;"><p style="font-weight: 600;">${taskEl.children[0].textContent}</p><p style="font-size: 0.75rem; color: #9ca3af;">${taskEl.children[1].textContent}</p></div></div>`;
+                } else if(item.classList.contains('break-item')) {
+                    const breakText = item.querySelector('span').textContent;
+                    imageHTML += `<div style="text-align: center; color: #9ca3af; font-size: 0.8rem; padding: 0.5rem 0; font-family: 'Inter';">--- ${breakText} ---</div>`;
+                }
             });
+
             imageContainer.innerHTML = imageHTML;
             html2canvas(imageContainer, { scale: 2, useCORS: true, backgroundColor: '#111827' }).then(canvas => {
                 const link = document.createElement('a');
@@ -638,7 +682,43 @@
         todoListContainer.addEventListener('click', (e) => { const taskElement = e.target.closest('.task-item'); if (!taskElement) return; const taskId = Number(taskElement.dataset.id); if (e.target.closest('input[type="checkbox"]')) { toggleTask(taskId); } if (e.target.closest('.delete-btn')) { deleteTask(taskId); } if (e.target.closest('.notes-btn')) { openNotesModal(taskId); } });
         generateRundownBtn.addEventListener('click', generateRundown);
         generateImageBtn.addEventListener('click', generateRundownImage);
-        rundownOutput.addEventListener('click', (e) => { const focusBtn = e.target.closest('.focus-btn'); if (focusBtn) { const taskId = Number(focusBtn.dataset.taskId); const duration = Number(focusBtn.dataset.duration); const task = tasks.find(t => t.id === taskId); if (task) startFocusTimer(duration, task.text); } const completeBtn = e.target.closest('.complete-btn-rundown'); if(completeBtn) { const taskId = Number(completeBtn.dataset.taskId); toggleTask(taskId); } });
+        rundownOutput.addEventListener('click', (e) => { 
+            const focusBtn = e.target.closest('.focus-btn'); 
+            if (focusBtn) { 
+                const taskId = Number(focusBtn.dataset.taskId); 
+                const duration = Number(focusBtn.dataset.duration); 
+                const task = tasks.find(t => t.id === taskId); 
+                if (task) startFocusTimer(duration, task.text); 
+            } 
+            
+            const completeBtn = e.target.closest('.complete-btn-rundown'); 
+            if(completeBtn) { 
+                const taskId = Number(completeBtn.dataset.taskId); 
+                toggleTask(taskId); 
+            }
+
+            const editBtn = e.target.closest('.edit-break-btn');
+            if (editBtn) {
+                const breakContent = editBtn.parentElement;
+                breakContent.querySelector('.break-display').classList.add('hidden');
+                breakContent.querySelector('.break-edit').classList.remove('hidden');
+                editBtn.classList.add('hidden');
+            }
+
+            const saveBtn = e.target.closest('.save-break-btn');
+            if (saveBtn) {
+                const taskIdBefore = saveBtn.dataset.taskIdBefore;
+                const breakItem = saveBtn.closest('.break-item');
+                const newBreakValue = parseInt(breakItem.querySelector('input').value);
+                
+                if (!isNaN(newBreakValue) && newBreakValue >= 0) {
+                    customBreaks[taskIdBefore] = newBreakValue;
+                    generateRundown();
+                } else {
+                    alert('Masukkan angka yang valid untuk jeda.');
+                }
+            }
+        });
         
         closeFocusModalBtn.addEventListener('click', () => { clearInterval(focusInterval); focusModalOverlay.classList.add('hidden'); });
         saveNoteBtn.addEventListener('click', saveNote);
@@ -647,9 +727,13 @@
         showMotivationalQuote();
         checkRepeatingTasks();
         updateThemeUI(document.documentElement.classList.contains('dark'));
-        // Default to quick form on load, then switch back to detailed form to hide it, then show quick form. This sets up the initial state correctly.
-        showDetailedFormBtn.click(); 
-        showQuickFormBtn.click();
+        
+        // Default to quick form on load
+        detailedFormContainer.classList.add('hidden');
+        quickFormContainer.classList.remove('hidden');
+        showQuickFormBtn.classList.add('hidden');
+        showDetailedFormBtn.classList.remove('hidden');
+
         renderAll();
     });
     </script>
