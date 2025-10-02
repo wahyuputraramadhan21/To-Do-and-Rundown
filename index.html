@@ -58,14 +58,20 @@
         #toast-notification.show {
             transform: translateX(0);
         }
+        .rundown-task-item.dragging {
+            opacity: 0.4;
+            background: #60a5fa;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 dark:bg-gray-900 dark:text-white antialiased">
 
+    <!-- Toast Notification -->
     <div id="toast-notification" class="fixed top-5 right-5 bg-blue-500 text-white py-2 px-5 rounded-lg shadow-lg z-50">
         <p id="toast-message"></p>
     </div>
 
+    <!-- Modals -->
     <div id="focus-modal-overlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 modal-overlay">
         <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 w-11/12 max-w-md text-center transform scale-95">
             <h3 id="focus-task-title" class="text-2xl font-bold text-blue-600 dark:text-blue-300 mb-2"></h3>
@@ -97,7 +103,41 @@
             <div id="report-content" class="space-y-4 text-lg"></div>
         </div>
     </div>
+    <div id="edit-task-modal-overlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 modal-overlay">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 w-11/12 max-w-lg transform scale-95">
+            <h3 class="text-2xl font-bold text-blue-600 dark:text-blue-300 mb-6">Edit Tugas</h3>
+            <form id="edit-task-form" class="space-y-3">
+                <input type="hidden" id="edit-task-id">
+                <input type="text" id="edit-task-input" placeholder="Nama tugas..." class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="number" id="edit-duration-input" placeholder="Durasi (menit)" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
+                    <input type="text" id="edit-category-input" placeholder="Kategori" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="date" id="edit-deadline-date-input" title="Tanggal Deadline" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="time" id="edit-deadline-time-input" title="Waktu Deadline" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select id="edit-priority-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="high">Prioritas Tinggi</option>
+                        <option value="medium">Prioritas Sedang</option>
+                        <option value="low">Prioritas Rendah</option>
+                    </select>
+                    <select id="edit-repeat-input" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="none">Tidak Berulang</option>
+                        <option value="daily">Berulang Harian</option>
+                        <option value="weekly">Berulang Mingguan</option>
+                    </select>
+                </div>
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Simpan</button>
+                    <button type="button" id="close-edit-task-modal" class="bg-slate-500 hover:bg-slate-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
+    <!-- Menu Drawer -->
     <div id="menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
     <div id="menu-drawer" class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-800 shadow-lg z-50 transform translate-x-full">
         <div class="p-6">
@@ -122,6 +162,7 @@
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="flex justify-between items-center mb-6">
             <div class="w-10"></div>
@@ -146,6 +187,7 @@
         </div>
 
         <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- To-Do List Section -->
             <section class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
                 <div class="flex justify-between items-center border-b border-slate-200 dark:border-gray-700 pb-2 mb-4">
                     <h2 class="text-2xl font-semibold">Daftar Tugas Anda</h2>
@@ -155,6 +197,7 @@
                     </div>
                 </div>
 
+                <!-- Detailed Form -->
                 <div id="detailed-form-container" class="hidden">
                      <form id="todo-form" class="space-y-3 mb-6">
                         <input type="text" id="task-input" placeholder="Nama tugas..." class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
@@ -178,6 +221,7 @@
                     </form>
                 </div>
 
+                <!-- Quick Form -->
                 <div id="quick-form-container">
                     <form id="quick-add-form" class="mb-6 space-y-3">
                         <input type="text" id="quick-task-input" placeholder="Tulis tugas cepat di sini..." class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
@@ -190,8 +234,12 @@
                 </div>
                 
                 <div id="filter-buttons" class="flex flex-wrap gap-2 mb-4"></div>
-                <div id="todo-list" class="space-y-3 overflow-y-auto pr-2" style="max-height: 40vh;"></div>
+                <div id="todo-list" class="space-y-3 overflow-y-auto pr-2" style="max-height: 40vh;">
+                    <p class="text-slate-500 dark:text-gray-500 text-center py-4">Menghubungkan ke database...</p>
+                </div>
             </section>
+            
+            <!-- Rundown Section -->
             <section class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
                  <h2 class="text-2xl font-semibold mb-4 border-b border-slate-200 dark:border-gray-700 pb-2">Rundown & Fokus</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-6">
@@ -203,14 +251,20 @@
                         <label for="break-time" class="font-medium">Jeda:</label>
                         <input type="number" id="break-time" value="10" min="0" placeholder="mnt" class="w-20 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <div class="flex-grow flex gap-2">
-                        <button id="generate-rundown-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex-grow">Buat Rundown</button>
-                        <button id="generate-image-btn" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg> Unduh
-                        </button>
+                    <div class="flex-grow">
+                        <button id="generate-rundown-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200">Buat Rundown</button>
                     </div>
                 </div>
-                <div id="rundown-output" class="space-y-3 overflow-y-auto pr-2" style="max-height: 55vh;">
+                <div class="flex flex-wrap items-center gap-2 mb-6">
+                    <div class="flex-grow">
+                         <label for="rundown-date-input" class="text-sm font-medium sr-only">Tanggal Gambar:</label>
+                         <input type="date" id="rundown-date-input" title="Tanggal Rundown untuk Gambar" class="w-full bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button id="generate-image-btn" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg> Unduh Gambar
+                    </button>
+                </div>
+                <div id="rundown-output" class="space-y-3 overflow-y-auto pr-2" style="max-height: 52vh;">
                      <div class="text-center py-8 px-4 border-2 border-dashed border-slate-300 dark:border-gray-700 rounded-lg">
                         <p class="text-slate-500 dark:text-gray-400">Jadwal Anda akan muncul di sini.</p>
                     </div>
@@ -219,9 +273,15 @@
         </main>
     </div>
     
+    <!-- Hidden container for generating image -->
     <div id="rundown-for-image" class="absolute left-[-9999px] w-[450px] p-8 bg-gray-900 text-white space-y-4"></div>
 
-    <script>
+    <script type="module">
+    // --- Firebase Integration ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     document.addEventListener('DOMContentLoaded', () => {
         // --- Elemen DOM ---
         const detailedFormContainer = document.getElementById('detailed-form-container');
@@ -262,10 +322,20 @@
         const closeFocusModalBtn = document.getElementById('close-focus-modal');
         const saveNoteBtn = document.getElementById('save-note-btn');
         const closeNotesModalBtn = document.getElementById('close-notes-modal');
+        const editTaskModalOverlay = document.getElementById('edit-task-modal-overlay');
+        const editTaskForm = document.getElementById('edit-task-form');
+        const closeEditTaskModalBtn = document.getElementById('close-edit-task-modal');
+        const editTaskIdInput = document.getElementById('edit-task-id');
+        const rundownDateInput = document.getElementById('rundown-date-input');
         
         // --- State Aplikasi ---
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        let completionHistory = JSON.parse(localStorage.getItem('completionHistory')) || [];
+        let app, db, auth, userId;
+        let tasks = [];
+        let completionHistory = [];
+        let tasksUnsubscribe, historyUnsubscribe;
+        let tasksToSchedule = [];
+        let draggedTaskId = null;
+
         let customBreaks = {};
         let categoryFilter = 'all';
         let timeFilter = 'all';
@@ -274,38 +344,59 @@
         const CIRCLE_LENGTH = 283;
         const quotes = [ "Perjalanan seribu mil dimulai dengan satu langkah.", "Lakukan apa yang kamu bisa, dengan apa yang kamu miliki, di mana pun kamu berada.", "Disiplin adalah jembatan antara tujuan dan pencapaian.", "Fokus pada tujuan, bukan rintangan." ];
         
-        // --- Form Switching Logic ---
-        showQuickFormBtn.addEventListener('click', () => {
-            detailedFormContainer.classList.add('hidden');
-            quickFormContainer.classList.remove('hidden');
-            showQuickFormBtn.classList.add('hidden');
-            showDetailedFormBtn.classList.remove('hidden');
-        });
-        showDetailedFormBtn.addEventListener('click', () => {
-            detailedFormContainer.classList.remove('hidden');
-            quickFormContainer.classList.add('hidden');
-            showQuickFormBtn.classList.remove('hidden');
-            showDetailedFormBtn.classList.add('hidden');
-        });
+        // --- Inisialisasi Firebase ---
+        const setupFirebase = async () => {
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-        // --- Quick Add Form Handler ---
-        quickAddForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const taskText = quickTaskInput.value.trim();
-            const duration = quickDurationInput.value;
-            const deadlineDate = quickDeadlineInput.value;
-            let deadline = null;
-            if (deadlineDate) {
-                deadline = new Date(`${deadlineDate}T23:59:59`).toISOString();
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        loadUserData();
+                    } else {
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Authentication failed:", error);
+                            todoListContainer.innerHTML = `<p class="text-red-500 text-center py-4">Gagal terhubung ke database. Coba muat ulang halaman.</p>`;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                 todoListContainer.innerHTML = `<p class="text-red-500 text-center py-4">Konfigurasi database tidak valid. Aplikasi tidak dapat berjalan.</p>`;
             }
-            if (taskText && duration) {
-                addTask(taskText, duration, 'medium', '', 'none', deadline);
-                quickAddForm.reset();
-                quickTaskInput.focus();
-                showToast(`Tugas "${taskText}" ditambahkan!`);
-            }
-        });
+        };
 
+        const loadUserData = () => {
+             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+             if (!userId) return;
+
+             if (tasksUnsubscribe) tasksUnsubscribe();
+             if (historyUnsubscribe) historyUnsubscribe();
+             
+             const tasksCollectionPath = `/artifacts/${appId}/users/${userId}/tasks`;
+             tasksUnsubscribe = onSnapshot(collection(db, tasksCollectionPath), (snapshot) => {
+                tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                checkRepeatingTasks();
+                renderAll();
+             }, (error) => console.error("Error fetching tasks:", error));
+
+             const historyCollectionPath = `/artifacts/${appId}/users/${userId}/completionHistory`;
+             historyUnsubscribe = onSnapshot(collection(db, historyCollectionPath), (snapshot) => {
+                completionHistory = snapshot.docs.map(doc => doc.data());
+             }, (error) => console.error("Error fetching history:", error));
+        };
+
+        // --- Fungsi Notifikasi ---
         const showToast = (message) => {
             const toastMessage = document.getElementById('toast-message');
             const toast = document.getElementById('toast-notification');
@@ -316,15 +407,16 @@
             }, 3000);
         };
         
-        const saveTasks = () => { localStorage.setItem('tasks', JSON.stringify(tasks)); renderAll(); };
-        const saveHistory = () => { localStorage.setItem('completionHistory', JSON.stringify(completionHistory)); };
+        // --- Fungsi Render Utama ---
         const renderAll = () => { renderTasks(); updateProgress(); renderFilterButtons(); };
+        
         const showMotivationalQuote = () => {
             if (motivationalQuoteEl) {
                 motivationalQuoteEl.textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
             }
         };
         
+        // --- Logika UI (Menu, Tema, Form) ---
         const toggleMenu = (show) => {
             menuOverlay.classList.toggle('hidden', !show);
             menuDrawer.classList.toggle('translate-x-full', !show);
@@ -336,6 +428,7 @@
             document.querySelectorAll('#theme-icon-sun').forEach(el => el.classList.toggle('hidden', isDark));
             document.querySelectorAll('#theme-icon-moon').forEach(el => el.classList.toggle('hidden', !isDark));
         };
+
         themeToggleBtnMenu.addEventListener('click', (e) => {
             e.preventDefault();
             const isCurrentlyDark = document.documentElement.classList.contains('dark');
@@ -349,25 +442,132 @@
                 updateThemeUI(true);
             }
         });
-        
+
+        showQuickFormBtn.addEventListener('click', () => {
+            detailedFormContainer.classList.add('hidden');
+            quickFormContainer.classList.remove('hidden');
+            showQuickFormBtn.classList.add('hidden');
+            showDetailedFormBtn.classList.remove('hidden');
+        });
+        showDetailedFormBtn.addEventListener('click', () => {
+            detailedFormContainer.classList.remove('hidden');
+            quickFormContainer.classList.add('hidden');
+            showQuickFormBtn.classList.remove('hidden');
+            showDetailedFormBtn.classList.add('hidden');
+        });
+
+        // --- Logika CRUD Tugas (Firestore) ---
+        const addTask = async (text, duration, priority, category, repeat, deadline) => {
+            if (!userId) return showToast("Tidak dapat menambahkan tugas. Pengguna belum terautentikasi.");
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const tasksCollectionPath = `/artifacts/${appId}/users/${userId}/tasks`;
+            
+            const newTask = { 
+                text, 
+                duration: parseInt(duration), 
+                priority, 
+                category, 
+                repeat, 
+                deadline, 
+                completed: false, 
+                notes: '', 
+                lastCompleted: null,
+                createdAt: serverTimestamp() 
+            };
+            try {
+                await addDoc(collection(db, tasksCollectionPath), newTask);
+            } catch (error) {
+                console.error("Error adding task: ", error);
+                showToast("Gagal menambahkan tugas.");
+            }
+        };
+
+        const toggleTask = async (id) => {
+            if (!userId) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${id}`;
+            const historyCollectionPath = `/artifacts/${appId}/users/${userId}/completionHistory`;
+            
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const newStatus = !task.completed;
+            const updateData = { completed: newStatus };
+            if (newStatus) {
+                if (task.repeat !== 'none') {
+                    updateData.lastCompleted = new Date().toISOString();
+                }
+                try {
+                     await addDoc(collection(db, historyCollectionPath), { 
+                        date: new Date().toISOString(), 
+                        duration: task.duration 
+                    });
+                } catch (error) {
+                     console.error("Error adding to history: ", error);
+                }
+            }
+
+            try {
+                await updateDoc(doc(db, taskDocPath), updateData);
+                if (isRundownGenerated) generateRundown();
+            } catch (error) {
+                console.error("Error toggling task: ", error);
+            }
+        };
+
+        const deleteTask = async (id) => {
+            if (!userId) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${id}`;
+            try {
+                await deleteDoc(doc(db, taskDocPath));
+                if (isRundownGenerated) generateRundown();
+            } catch (error) {
+                console.error("Error deleting task: ", error);
+            }
+        };
+
+        const saveNote = async () => {
+            if (currentEditingTaskId === null || !userId) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${currentEditingTaskId}`;
+            
+            const notes = document.getElementById('notes-textarea').value.trim();
+            try {
+                await updateDoc(doc(db, taskDocPath), { notes });
+            } catch (error) {
+                 console.error("Error saving note: ", error);
+            }
+            closeNotesModal();
+        };
+
         const checkRepeatingTasks = () => {
             const today = new Date().setHours(0,0,0,0);
             tasks.forEach(task => {
                 if (task.repeat === 'none' || !task.lastCompleted) return;
+
                 const lastCompletedDate = new Date(task.lastCompleted).setHours(0,0,0,0);
+                let shouldReset = false;
+
                 if (task.repeat === 'daily' && lastCompletedDate < today) {
-                    task.completed = false;
+                    shouldReset = true;
                 }
                 if (task.repeat === 'weekly') {
                     const oneWeek = 7 * 24 * 60 * 60 * 1000;
                     if (today - lastCompletedDate >= oneWeek) {
-                        task.completed = false;
+                        shouldReset = true;
                     }
                 }
+
+                if (shouldReset && task.completed) {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${task.id}`;
+                    updateDoc(doc(db, taskDocPath), { completed: false }).catch(err => console.error("Failed to reset task:", err));
+                }
             });
-            localStorage.setItem('tasks', JSON.stringify(tasks));
         };
 
+        // --- Logika Filter & Tampilan Tugas ---
         const getCurrentlyVisibleTasks = () => {
             let currentTasks = [...tasks];
             if (categoryFilter !== 'all') {
@@ -409,26 +609,6 @@
             });
         };
 
-        filterButtonsContainer.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                timeFilter = 'all'; 
-                categoryFilter = e.target.dataset.filter;
-                renderAll();
-            }
-        });
-        
-        document.querySelectorAll('.time-filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                categoryFilter = 'all'; 
-                timeFilter = e.target.dataset.filter;
-                renderAll();
-                toggleMenu(false);
-                let filterName = {"today": "Hari Ini", "tomorrow": "Besok", "week": "Minggu Ini"}[timeFilter] || "";
-                showToast(`Filter: Tugas ${filterName}`);
-            });
-        });
-
         const renderTasks = () => {
             todoListContainer.innerHTML = '';
             const currentTasks = getCurrentlyVisibleTasks();
@@ -457,7 +637,7 @@
                     const formattedDate = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
                     
                     let timeString = '';
-                    if (deadlineDate.getHours() !== 23 || deadlineDate.getMinutes() !== 59 || deadlineDate.getSeconds() !== 59) {
+                    if (deadlineDate.getHours() !== 23 || deadlineDate.getMinutes() !== 59) {
                         timeString = ' ' + deadlineDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                     }
 
@@ -468,127 +648,6 @@
             });
         };
 
-        const addTask = (text, duration, priority, category, repeat, deadline) => {
-            const newTask = { id: Date.now(), text, duration: parseInt(duration), priority, category, repeat, deadline, completed: false, notes: '', lastCompleted: null };
-            tasks.push(newTask);
-            saveTasks();
-        };
-        const toggleTask = (id) => {
-            const taskIndex = tasks.findIndex(t => t.id === id);
-            if (taskIndex > -1) {
-                tasks[taskIndex].completed = !tasks[taskIndex].completed;
-                if (tasks[taskIndex].completed) {
-                    if (tasks[taskIndex].repeat !== 'none') tasks[taskIndex].lastCompleted = new Date().toISOString();
-                    completionHistory.push({ date: new Date().toISOString(), duration: tasks[taskIndex].duration });
-                    saveHistory();
-                }
-                saveTasks();
-                if (isRundownGenerated) generateRundown();
-            }
-        };
-        const deleteTask = (id) => {
-            tasks = tasks.filter(t => t.id !== id);
-            saveTasks();
-            if (isRundownGenerated) generateRundown();
-        };
-        
-        const generateReport = () => {
-            reportModalOverlay.classList.remove('hidden');
-            const now = new Date();
-            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const recentHistory = completionHistory.filter(item => new Date(item.date) > oneWeekAgo);
-            const totalTasksCompleted = recentHistory.length;
-            const totalMinutesFocused = recentHistory.reduce((sum, item) => sum + item.duration, 0);
-            const reportContentEl = document.getElementById('report-content');
-            reportContentEl.innerHTML = `<p><strong>Tugas Selesai:</strong> ${totalTasksCompleted} tugas</p><p><strong>Total Waktu:</strong> ${Math.floor(totalMinutesFocused / 60)} jam ${totalMinutesFocused % 60} menit</p>`;
-        };
-        reportBtnMenu.addEventListener('click', (e) => { e.preventDefault(); generateReport(); toggleMenu(false); });
-        closeReportModalBtn.addEventListener('click', () => reportModalOverlay.classList.add('hidden'));
-
-        const generateRundown = () => {
-            const globalBreakTime = parseInt(breakTimeInput.value) || 0;
-            const relevantTasks = getCurrentlyVisibleTasks().filter(task => !task.completed);
-            if (relevantTasks.length === 0) {
-                rundownOutput.innerHTML = `<div class="text-center py-8 px-4 border-2 border-dashed border-slate-300 dark:border-gray-700 rounded-lg"><p class="text-slate-500 dark:text-gray-400">Tidak ada tugas untuk dijadwalkan.</p></div>`;
-                isRundownGenerated = false;
-                return;
-            }
-            
-            const isAllDayMarker = (date) => date.getHours() === 23 && date.getMinutes() === 59 && date.getSeconds() === 59;
-            const tasksWithSpecificTime = relevantTasks.filter(t => t.deadline && !isAllDayMarker(new Date(t.deadline)));
-            
-            let startTimeValue;
-            if (tasksWithSpecificTime.length > 0) {
-                const earliestTime = new Date(Math.min(...tasksWithSpecificTime.map(t => new Date(t.deadline).getTime())));
-                startTimeValue = earliestTime.toTimeString().slice(0, 5);
-            } else {
-                startTimeValue = startTimeInput.value;
-            }
-            startTimeInput.value = startTimeValue;
-
-            if (!startTimeValue) {
-                rundownOutput.innerHTML = '<p class="text-red-400 text-center">Waktu mulai tidak valid.</p>';
-                isRundownGenerated = false;
-                return;
-            }
-            const priorityOrder = { high: 1, medium: 2, low: 3 };
-            const tasksToSchedule = [...relevantTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-            rundownOutput.innerHTML = '';
-            const [startHour, startMinute] = startTimeValue.split(':').map(Number);
-            let currentTime = new Date();
-            currentTime.setHours(startHour, startMinute, 0, 0);
-            isRundownGenerated = true;
-
-            tasksToSchedule.forEach((task, index) => {
-                const startTime = new Date(currentTime);
-                const endTime = new Date(currentTime.getTime() + task.duration * 60000);
-                const formatTime = (date) => date.toTimeString().slice(0, 5);
-                const rundownItem = document.createElement('div');
-                rundownItem.className = `rundown-task-item flex items-center gap-4 bg-slate-100 dark:bg-gray-700/50 p-3 rounded-lg priority-${task.priority}`;
-                rundownItem.innerHTML = `<div class="text-right font-mono text-sm w-16 flex-shrink-0"><p class="text-blue-500 dark:text-blue-300">${formatTime(startTime)}</p><p class="text-slate-500 dark:text-gray-400">${formatTime(endTime)}</p></div><div class="border-l-2 border-slate-300 dark:border-gray-600 pl-4 flex-grow"><p class="font-semibold">${task.text}</p><p class="text-xs text-slate-500 dark:text-gray-400">${task.duration} menit</p></div><div class="flex flex-col sm:flex-row gap-2"><button data-task-id="${task.id}" class="complete-btn-rundown bg-green-600/50 hover:bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Selesai</button><button data-task-id="${task.id}" data-duration="${task.duration}" class="focus-btn bg-blue-600/50 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Fokus</button></div>`;
-                rundownOutput.appendChild(rundownItem);
-                
-                currentTime = endTime;
-                
-                if (index < tasksToSchedule.length - 1) {
-                    const breakDuration = customBreaks[task.id] ?? globalBreakTime;
-                    if (breakDuration > 0) {
-                        const breakStartTime = new Date(currentTime);
-                        currentTime = new Date(currentTime.getTime() + breakDuration * 60000);
-                        
-                        const breakItem = document.createElement('div');
-                        breakItem.className = 'break-item flex items-center gap-4 text-slate-500 dark:text-gray-500 text-xs py-1';
-                        breakItem.innerHTML = `
-                            <div class="w-16 text-right font-mono">${breakStartTime.toTimeString().slice(0, 5)}</div>
-                            <div class="flex-grow flex items-center justify-between gap-2 border-l-2 border-slate-300 dark:border-gray-700 border-dashed pl-4">
-                                <div class="break-display flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-4 0v-3H2v3h2z"/></svg>
-                                    <span>Jeda (${breakDuration} menit)</span>
-                                </div>
-                                <div class="break-edit hidden flex items-center gap-2">
-                                    <input type="number" value="${breakDuration}" class="w-16 bg-slate-200 dark:bg-gray-600 rounded p-1 text-center">
-                                    <button class="save-break-btn bg-green-500 text-white px-2 py-0.5 rounded text-xs" data-task-id-before="${task.id}">Simpan</button>
-                                </div>
-                                <button class="edit-break-btn text-blue-500 hover:underline" data-task-id-before="${task.id}">Edit</button>
-                            </div>
-                        `;
-                        rundownOutput.appendChild(breakItem);
-                    }
-                }
-            });
-        };
-
-        todoForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const deadline = deadlineDateInput.value ? new Date(`${deadlineDateInput.value}T${deadlineTimeInput.value || '00:00'}`).toISOString() : null;
-            if (taskInput.value.trim() && durationInput.value) {
-                addTask(taskInput.value.trim(), durationInput.value, priorityInput.value, categoryInput.value.trim(), repeatInput.value, deadline);
-                todoForm.reset(); 
-                taskInput.focus();
-                showToast(`Tugas ditambahkan dengan detail!`);
-            }
-        });
-        
         const updateProgress = () => {
             const totalTasks = tasks.length;
             if (totalTasks === 0) {
@@ -602,14 +661,166 @@
             progressCircle.style.strokeDashoffset = CIRCLE_LENGTH - (percentage / 100) * CIRCLE_LENGTH;
             if (percentage === 100 && completedTasks > 0) confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
         };
+        
+        // --- Event Listeners untuk Form & Filter ---
+        quickAddForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const taskText = quickTaskInput.value.trim();
+            const duration = quickDurationInput.value;
+            const deadlineDate = quickDeadlineInput.value;
+            let deadline = null;
+            if (deadlineDate) {
+                deadline = new Date(`${deadlineDate}T23:59:59`).toISOString();
+            }
+            if (taskText && duration) {
+                addTask(taskText, duration, 'medium', '', 'none', deadline);
+                quickAddForm.reset();
+                quickTaskInput.focus();
+                showToast(`Tugas "${taskText}" ditambahkan!`);
+            }
+        });
+
+        todoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const deadline = deadlineDateInput.value ? new Date(`${deadlineDateInput.value}T${deadlineTimeInput.value || '23:59:59'}`).toISOString() : null;
+            if (taskInput.value.trim() && durationInput.value) {
+                addTask(taskInput.value.trim(), durationInput.value, priorityInput.value, categoryInput.value.trim(), repeatInput.value, deadline);
+                todoForm.reset(); 
+                taskInput.focus();
+                showToast(`Tugas ditambahkan dengan detail!`);
+            }
+        });
+        
+        filterButtonsContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                timeFilter = 'all'; 
+                categoryFilter = e.target.dataset.filter;
+                renderAll();
+            }
+        });
+        
+        document.querySelectorAll('.time-filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                categoryFilter = 'all'; 
+                timeFilter = e.target.dataset.filter;
+                renderAll();
+                toggleMenu(false);
+                let filterName = {"today": "Hari Ini", "tomorrow": "Besok", "week": "Minggu Ini"}[timeFilter] || "";
+                showToast(`Filter: Tugas ${filterName}`);
+            });
+        });
+
+        todoListContainer.addEventListener('click', (e) => { 
+            const taskElement = e.target.closest('.task-item'); 
+            if (!taskElement) return; 
+            const taskId = taskElement.dataset.id; 
+            if (e.target.closest('input[type="checkbox"]')) { toggleTask(taskId); } 
+            if (e.target.closest('.delete-btn')) { deleteTask(taskId); } 
+            if (e.target.closest('.notes-btn')) { openNotesModal(taskId); } 
+        });
+
+        // --- Fitur Tambahan (Rundown, Laporan, Fokus, dsb.) ---
+        const generateReport = () => {
+            reportModalOverlay.classList.remove('hidden');
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const recentHistory = completionHistory.filter(item => new Date(item.date) > oneWeekAgo);
+            const totalTasksCompleted = recentHistory.length;
+            const totalMinutesFocused = recentHistory.reduce((sum, item) => sum + item.duration, 0);
+            const reportContentEl = document.getElementById('report-content');
+            reportContentEl.innerHTML = `<p><strong>Tugas Selesai:</strong> ${totalTasksCompleted} tugas</p><p><strong>Total Waktu:</strong> ${Math.floor(totalMinutesFocused / 60)} jam ${totalMinutesFocused % 60} menit</p>`;
+        };
+        reportBtnMenu.addEventListener('click', (e) => { e.preventDefault(); generateReport(); toggleMenu(false); });
+        closeReportModalBtn.addEventListener('click', () => reportModalOverlay.classList.add('hidden'));
+        
+        const renderRundownSchedule = () => {
+            const startTimeValue = startTimeInput.value;
+            rundownOutput.innerHTML = '';
+            isRundownGenerated = tasksToSchedule.length > 0;
+            if (!isRundownGenerated) {
+                rundownOutput.innerHTML = `<div class="text-center py-8 px-4 border-2 border-dashed border-slate-300 dark:border-gray-700 rounded-lg"><p class="text-slate-500 dark:text-gray-400">Tidak ada tugas untuk dijadwalkan.</p></div>`;
+                return;
+            }
+
+            const [startHour, startMinute] = startTimeValue.split(':').map(Number);
+            let currentTime = new Date();
+            currentTime.setHours(startHour, startMinute, 0, 0);
+            const globalBreakTime = parseInt(breakTimeInput.value) || 0;
+            const editSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>`;
+            const dragHandleSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>`;
+
+
+            tasksToSchedule.forEach((task, index) => {
+                const startTime = new Date(currentTime);
+                const endTime = new Date(currentTime.getTime() + task.duration * 60000);
+                const formatTime = (date) => date.toTimeString().slice(0, 5);
+                const rundownItem = document.createElement('div');
+                rundownItem.className = `rundown-task-item flex items-center gap-3 bg-slate-100 dark:bg-gray-700/50 p-3 rounded-lg priority-${task.priority}`;
+                rundownItem.setAttribute('draggable', true);
+                rundownItem.dataset.taskId = task.id;
+
+                rundownItem.innerHTML = `
+                    <div class="drag-handle cursor-grab text-slate-400 dark:text-gray-500">${dragHandleSVG}</div>
+                    <div class="text-right font-mono text-sm w-16 flex-shrink-0">
+                        <p class="text-blue-500 dark:text-blue-300">${formatTime(startTime)}</p>
+                        <p class="text-slate-500 dark:text-gray-400">${formatTime(endTime)}</p>
+                    </div>
+                    <div class="border-l-2 border-slate-300 dark:border-gray-600 pl-3 flex-grow min-w-0">
+                        <p class="font-semibold truncate">${task.text}</p>
+                        <p class="text-xs text-slate-500 dark:text-gray-400">${task.duration} menit</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-2">
+                        <button data-task-id="${task.id}" class="edit-rundown-task-btn text-slate-500 hover:text-blue-500 p-1.5 rounded-full transition-colors" title="Edit Tugas">${editSVG}</button>
+                        <button data-task-id="${task.id}" class="complete-btn-rundown bg-green-600/50 hover:bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Selesai</button>
+                        <button data-task-id="${task.id}" data-duration="${task.duration}" class="focus-btn bg-blue-600/50 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">Fokus</button>
+                    </div>`;
+
+                rundownOutput.appendChild(rundownItem);
+                currentTime = endTime;
+                
+                if (index < tasksToSchedule.length - 1) {
+                    const breakDuration = customBreaks[task.id] ?? globalBreakTime;
+                    if (breakDuration > 0) {
+                        const breakStartTime = new Date(currentTime);
+                        currentTime = new Date(currentTime.getTime() + breakDuration * 60000);
+                        const breakItem = document.createElement('div');
+                        breakItem.className = 'break-item flex items-center gap-4 text-slate-500 dark:text-gray-500 text-xs py-1';
+                        breakItem.innerHTML = `<div class="w-16 text-right font-mono">${breakStartTime.toTimeString().slice(0, 5)}</div><div class="flex-grow flex items-center justify-between gap-2 border-l-2 border-slate-300 dark:border-gray-700 border-dashed pl-4"><div class="break-display flex items-center gap-2"><span>Jeda (${breakDuration} menit)</span></div><div class="break-edit hidden flex items-center gap-2"><input type="number" value="${breakDuration}" class="w-16 bg-slate-200 dark:bg-gray-600 rounded p-1 text-center"><button class="save-break-btn bg-green-500 text-white px-2 py-0.5 rounded text-xs" data-task-id-before="${task.id}">Simpan</button></div><button class="edit-break-btn text-blue-500 hover:underline" data-task-id-before="${task.id}">Edit</button></div>`;
+                        rundownOutput.appendChild(breakItem);
+                    }
+                }
+            });
+        };
+
+        const generateRundown = () => {
+            const relevantTasks = getCurrentlyVisibleTasks().filter(task => !task.completed);
+            const startTimeValue = startTimeInput.value;
+            
+            if (!startTimeValue) {
+                rundownOutput.innerHTML = '<p class="text-red-400 text-center">Waktu mulai tidak valid.</p>';
+                isRundownGenerated = false;
+                return;
+            }
+
+            const priorityOrder = { high: 1, medium: 2, low: 3 };
+            tasksToSchedule = [...relevantTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+            
+            renderRundownSchedule();
+        };
+        
         const generateRundownImage = () => {
-            if (!isRundownGenerated) return alert("Silakan buat rundown terlebih dahulu.");
+            if (!isRundownGenerated) return showToast("Silakan buat rundown terlebih dahulu.");
             const originalButtonText = generateImageBtn.innerHTML;
             generateImageBtn.disabled = true;
             generateImageBtn.innerHTML = `Memproses...`;
             const imageContainer = document.getElementById('rundown-for-image');
-            const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let imageHTML = `<h2 class="text-3xl font-bold text-center text-blue-300 mb-2">Rundown Hari Ini</h2><p class="text-center text-gray-400 mb-6">${date}</p>`;
+
+            const rundownDateValue = rundownDateInput.value;
+            const dateToUse = rundownDateValue ? new Date(rundownDateValue + 'T00:00:00') : new Date();
+
+            const date = dateToUse.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            let imageHTML = `<h2 class="text-3xl font-bold text-center text-blue-300 mb-2">Rundown Anda</h2><p class="text-center text-gray-400 mb-6">${date}</p>`;
             
             Array.from(rundownOutput.children).forEach(item => {
                 if(item.classList.contains('rundown-task-item')) {
@@ -626,7 +837,7 @@
             imageContainer.innerHTML = imageHTML;
             html2canvas(imageContainer, { scale: 2, useCORS: true, backgroundColor: '#111827' }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `rundown-${new Date().toISOString().slice(0,10)}.png`;
+                link.download = `rundown-${dateToUse.toISOString().slice(0,10)}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             }).catch(err => console.error("Gagal membuat gambar:", err)).finally(() => {
@@ -657,6 +868,7 @@
             }, 1000);
             focusModalOverlay.classList.remove('hidden');
         };
+
         const openNotesModal = (taskId) => {
             const task = tasks.find(t => t.id === taskId);
             if (!task) return;
@@ -669,23 +881,83 @@
             notesModalOverlay.classList.add('hidden');
             currentEditingTaskId = null;
         };
-        const saveNote = () => {
-            if (currentEditingTaskId === null) return;
-            const task = tasks.find(t => t.id === currentEditingTaskId);
-            if (task) {
-                task.notes = document.getElementById('notes-textarea').value.trim();
-                saveTasks();
+
+        const openEditTaskModal = (taskId) => {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            editTaskIdInput.value = task.id;
+            document.getElementById('edit-task-input').value = task.text;
+            document.getElementById('edit-duration-input').value = task.duration;
+            document.getElementById('edit-category-input').value = task.category || '';
+            document.getElementById('edit-priority-input').value = task.priority;
+            document.getElementById('edit-repeat-input').value = task.repeat;
+
+            if (task.deadline) {
+                const deadline = new Date(task.deadline);
+                const dateString = deadline.toISOString().split('T')[0];
+                const timeString = deadline.toTimeString().slice(0, 5);
+                document.getElementById('edit-deadline-date-input').value = dateString;
+                document.getElementById('edit-deadline-time-input').value = timeString;
+            } else {
+                document.getElementById('edit-deadline-date-input').value = '';
+                document.getElementById('edit-deadline-time-input').value = '';
             }
-            closeNotesModal();
+
+            editTaskModalOverlay.classList.remove('hidden');
         };
 
-        todoListContainer.addEventListener('click', (e) => { const taskElement = e.target.closest('.task-item'); if (!taskElement) return; const taskId = Number(taskElement.dataset.id); if (e.target.closest('input[type="checkbox"]')) { toggleTask(taskId); } if (e.target.closest('.delete-btn')) { deleteTask(taskId); } if (e.target.closest('.notes-btn')) { openNotesModal(taskId); } });
+        const closeEditTaskModal = () => {
+            editTaskModalOverlay.classList.add('hidden');
+        };
+        
+        editTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const taskId = editTaskIdInput.value;
+            if (!userId || !taskId) return;
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${taskId}`;
+            
+            const deadlineDate = document.getElementById('edit-deadline-date-input').value;
+            const deadlineTime = document.getElementById('edit-deadline-time-input').value;
+            let deadline = null;
+            if (deadlineDate) {
+                deadline = new Date(`${deadlineDate}T${deadlineTime || '23:59:59'}`).toISOString();
+            }
+            
+            const updatedData = {
+                text: document.getElementById('edit-task-input').value.trim(),
+                duration: parseInt(document.getElementById('edit-duration-input').value),
+                category: document.getElementById('edit-category-input').value.trim(),
+                priority: document.getElementById('edit-priority-input').value,
+                repeat: document.getElementById('edit-repeat-input').value,
+                deadline: deadline,
+            };
+            
+            try {
+                await updateDoc(doc(db, taskDocPath), updatedData);
+                showToast("Tugas berhasil diperbarui!");
+                closeEditTaskModal();
+                if (isRundownGenerated) {
+                    generateRundown();
+                }
+            } catch (error) {
+                console.error("Error updating task: ", error);
+                showToast("Gagal memperbarui tugas.");
+            }
+        });
+
+        closeEditTaskModalBtn.addEventListener('click', closeEditTaskModal);
+        
         generateRundownBtn.addEventListener('click', generateRundown);
         generateImageBtn.addEventListener('click', generateRundownImage);
+        
+        // --- Event Listeners untuk Rundown ---
         rundownOutput.addEventListener('click', (e) => { 
             const focusBtn = e.target.closest('.focus-btn'); 
             if (focusBtn) { 
-                const taskId = Number(focusBtn.dataset.taskId); 
+                const taskId = focusBtn.dataset.taskId; 
                 const duration = Number(focusBtn.dataset.duration); 
                 const task = tasks.find(t => t.id === taskId); 
                 if (task) startFocusTimer(duration, task.text); 
@@ -693,48 +965,94 @@
             
             const completeBtn = e.target.closest('.complete-btn-rundown'); 
             if(completeBtn) { 
-                const taskId = Number(completeBtn.dataset.taskId); 
+                const taskId = completeBtn.dataset.taskId; 
                 toggleTask(taskId); 
             }
 
-            const editBtn = e.target.closest('.edit-break-btn');
+            const editBtn = e.target.closest('.edit-rundown-task-btn');
             if (editBtn) {
-                const breakContent = editBtn.parentElement;
-                breakContent.querySelector('.break-display').classList.add('hidden');
-                breakContent.querySelector('.break-edit').classList.remove('hidden');
-                editBtn.classList.add('hidden');
+                const taskId = editBtn.dataset.taskId;
+                openEditTaskModal(taskId);
             }
 
-            const saveBtn = e.target.closest('.save-break-btn');
-            if (saveBtn) {
-                const taskIdBefore = saveBtn.dataset.taskIdBefore;
-                const breakItem = saveBtn.closest('.break-item');
+            const editBreakBtn = e.target.closest('.edit-break-btn');
+            if (editBreakBtn) {
+                const breakContent = editBreakBtn.parentElement;
+                breakContent.querySelector('.break-display').classList.add('hidden');
+                breakContent.querySelector('.break-edit').classList.remove('hidden');
+                editBreakBtn.classList.add('hidden');
+            }
+
+            const saveBreakBtn = e.target.closest('.save-break-btn');
+            if (saveBreakBtn) {
+                const taskIdBefore = saveBreakBtn.dataset.taskIdBefore;
+                const breakItem = saveBreakBtn.closest('.break-item');
                 const newBreakValue = parseInt(breakItem.querySelector('input').value);
                 
                 if (!isNaN(newBreakValue) && newBreakValue >= 0) {
                     customBreaks[taskIdBefore] = newBreakValue;
-                    generateRundown();
+                    renderRundownSchedule();
                 } else {
-                    alert('Masukkan angka yang valid untuk jeda.');
+                    showToast('Masukkan angka yang valid untuk jeda.');
                 }
             }
         });
+
+        rundownOutput.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.rundown-task-item');
+            if (item) {
+                draggedTaskId = item.dataset.taskId;
+                setTimeout(() => { item.classList.add('dragging'); }, 0);
+            }
+        });
+
+        rundownOutput.addEventListener('dragend', (e) => {
+            const item = e.target.closest('.rundown-task-item');
+            if (item) {
+                item.classList.remove('dragging');
+            }
+            draggedTaskId = null;
+        });
+
+        rundownOutput.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        rundownOutput.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetItem = e.target.closest('.rundown-task-item');
+            const draggingItem = rundownOutput.querySelector('.dragging');
+            if (draggingItem) draggingItem.classList.remove('dragging');
+            
+            if (!targetItem || !draggedTaskId || targetItem.dataset.taskId === draggedTaskId) return;
+            
+            const draggedIndex = tasksToSchedule.findIndex(t => t.id === draggedTaskId);
+            const targetIndex = tasksToSchedule.findIndex(t => t.id === targetItem.dataset.taskId);
+            
+            if (draggedIndex > -1 && targetIndex > -1) {
+                const [draggedItem] = tasksToSchedule.splice(draggedIndex, 1);
+                tasksToSchedule.splice(targetIndex, 0, draggedItem);
+                renderRundownSchedule();
+            }
+        });
+        
         
         closeFocusModalBtn.addEventListener('click', () => { clearInterval(focusInterval); focusModalOverlay.classList.add('hidden'); });
         saveNoteBtn.addEventListener('click', saveNote);
         closeNotesModalBtn.addEventListener('click', closeNotesModal);
         
+        // --- Inisialisasi Aplikasi ---
         showMotivationalQuote();
-        checkRepeatingTasks();
         updateThemeUI(document.documentElement.classList.contains('dark'));
+
+        rundownDateInput.value = new Date().toISOString().slice(0, 10);
         
-        // Default to quick form on load
         detailedFormContainer.classList.add('hidden');
         quickFormContainer.classList.remove('hidden');
         showQuickFormBtn.classList.add('hidden');
         showDetailedFormBtn.classList.remove('hidden');
 
-        renderAll();
+        setupFirebase();
     });
     </script>
 </body>
