@@ -235,7 +235,6 @@
                 
                 <div id="filter-buttons" class="flex flex-wrap gap-2 mb-4"></div>
                 <div id="todo-list" class="space-y-3 overflow-y-auto pr-2" style="max-height: 40vh;">
-                    <p class="text-slate-500 dark:text-gray-500 text-center py-4">Menghubungkan ke database...</p>
                 </div>
             </section>
             
@@ -276,12 +275,7 @@
     <!-- Hidden container for generating image -->
     <div id="rundown-for-image" class="absolute left-[-9999px] w-[450px] p-8 bg-gray-900 text-white space-y-4"></div>
 
-    <script type="module">
-    // --- Firebase Integration ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- Elemen DOM ---
         const detailedFormContainer = document.getElementById('detailed-form-container');
@@ -329,10 +323,8 @@
         const rundownDateInput = document.getElementById('rundown-date-input');
         
         // --- State Aplikasi ---
-        let app, db, auth, userId;
-        let tasks = [];
-        let completionHistory = [];
-        let tasksUnsubscribe, historyUnsubscribe;
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let completionHistory = JSON.parse(localStorage.getItem('completionHistory')) || [];
         let tasksToSchedule = [];
         let draggedTaskId = null;
 
@@ -344,56 +336,13 @@
         const CIRCLE_LENGTH = 283;
         const quotes = [ "Perjalanan seribu mil dimulai dengan satu langkah.", "Lakukan apa yang kamu bisa, dengan apa yang kamu miliki, di mana pun kamu berada.", "Disiplin adalah jembatan antara tujuan dan pencapaian.", "Fokus pada tujuan, bukan rintangan." ];
         
-        // --- Inisialisasi Firebase ---
-        const setupFirebase = async () => {
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        loadUserData();
-                    } else {
-                        try {
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (error) {
-                            console.error("Authentication failed:", error);
-                            todoListContainer.innerHTML = `<p class="text-red-500 text-center py-4">Gagal terhubung ke database. Coba muat ulang halaman.</p>`;
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                 todoListContainer.innerHTML = `<p class="text-red-500 text-center py-4">Konfigurasi database tidak valid. Aplikasi tidak dapat berjalan.</p>`;
-            }
+        // --- Fungsi Penyimpanan ---
+        const saveTasks = () => {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderAll();
         };
-
-        const loadUserData = () => {
-             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-             if (!userId) return;
-
-             if (tasksUnsubscribe) tasksUnsubscribe();
-             if (historyUnsubscribe) historyUnsubscribe();
-             
-             const tasksCollectionPath = `/artifacts/${appId}/users/${userId}/tasks`;
-             tasksUnsubscribe = onSnapshot(collection(db, tasksCollectionPath), (snapshot) => {
-                tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                checkRepeatingTasks();
-                renderAll();
-             }, (error) => console.error("Error fetching tasks:", error));
-
-             const historyCollectionPath = `/artifacts/${appId}/users/${userId}/completionHistory`;
-             historyUnsubscribe = onSnapshot(collection(db, historyCollectionPath), (snapshot) => {
-                completionHistory = snapshot.docs.map(doc => doc.data());
-             }, (error) => console.error("Error fetching history:", error));
+        const saveHistory = () => {
+            localStorage.setItem('completionHistory', JSON.stringify(completionHistory));
         };
 
         // --- Fungsi Notifikasi ---
@@ -456,13 +405,10 @@
             showDetailedFormBtn.classList.add('hidden');
         });
 
-        // --- Logika CRUD Tugas (Firestore) ---
-        const addTask = async (text, duration, priority, category, repeat, deadline) => {
-            if (!userId) return showToast("Tidak dapat menambahkan tugas. Pengguna belum terautentikasi.");
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const tasksCollectionPath = `/artifacts/${appId}/users/${userId}/tasks`;
-            
+        // --- Logika CRUD Tugas (Local Storage) ---
+        const addTask = (text, duration, priority, category, repeat, deadline) => {
             const newTask = { 
+                id: Date.now(),
                 text, 
                 duration: parseInt(duration), 
                 priority, 
@@ -471,78 +417,51 @@
                 deadline, 
                 completed: false, 
                 notes: '', 
-                lastCompleted: null,
-                createdAt: serverTimestamp() 
+                lastCompleted: null
             };
-            try {
-                await addDoc(collection(db, tasksCollectionPath), newTask);
-            } catch (error) {
-                console.error("Error adding task: ", error);
-                showToast("Gagal menambahkan tugas.");
-            }
+            tasks.push(newTask);
+            saveTasks();
         };
 
-        const toggleTask = async (id) => {
-            if (!userId) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${id}`;
-            const historyCollectionPath = `/artifacts/${appId}/users/${userId}/completionHistory`;
+        const toggleTask = (id) => {
+            const taskIndex = tasks.findIndex(t => t.id === id);
+            if (taskIndex === -1) return;
+
+            tasks[taskIndex].completed = !tasks[taskIndex].completed;
             
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
-
-            const newStatus = !task.completed;
-            const updateData = { completed: newStatus };
-            if (newStatus) {
-                if (task.repeat !== 'none') {
-                    updateData.lastCompleted = new Date().toISOString();
+            if (tasks[taskIndex].completed) {
+                if (tasks[taskIndex].repeat !== 'none') {
+                    tasks[taskIndex].lastCompleted = new Date().toISOString();
                 }
-                try {
-                     await addDoc(collection(db, historyCollectionPath), { 
-                        date: new Date().toISOString(), 
-                        duration: task.duration 
-                    });
-                } catch (error) {
-                     console.error("Error adding to history: ", error);
-                }
+                completionHistory.push({ 
+                    date: new Date().toISOString(), 
+                    duration: tasks[taskIndex].duration 
+                });
+                saveHistory();
             }
-
-            try {
-                await updateDoc(doc(db, taskDocPath), updateData);
-                if (isRundownGenerated) generateRundown();
-            } catch (error) {
-                console.error("Error toggling task: ", error);
-            }
+            saveTasks();
+            if (isRundownGenerated) generateRundown();
         };
 
-        const deleteTask = async (id) => {
-            if (!userId) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${id}`;
-            try {
-                await deleteDoc(doc(db, taskDocPath));
-                if (isRundownGenerated) generateRundown();
-            } catch (error) {
-                console.error("Error deleting task: ", error);
-            }
+        const deleteTask = (id) => {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            if (isRundownGenerated) generateRundown();
         };
 
-        const saveNote = async () => {
-            if (currentEditingTaskId === null || !userId) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${currentEditingTaskId}`;
-            
-            const notes = document.getElementById('notes-textarea').value.trim();
-            try {
-                await updateDoc(doc(db, taskDocPath), { notes });
-            } catch (error) {
-                 console.error("Error saving note: ", error);
+        const saveNote = () => {
+            if (currentEditingTaskId === null) return;
+            const taskIndex = tasks.findIndex(t => t.id === currentEditingTaskId);
+            if (taskIndex > -1) {
+                tasks[taskIndex].notes = document.getElementById('notes-textarea').value.trim();
+                saveTasks();
             }
             closeNotesModal();
         };
 
         const checkRepeatingTasks = () => {
             const today = new Date().setHours(0,0,0,0);
+            let modified = false;
             tasks.forEach(task => {
                 if (task.repeat === 'none' || !task.lastCompleted) return;
 
@@ -560,11 +479,14 @@
                 }
 
                 if (shouldReset && task.completed) {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${task.id}`;
-                    updateDoc(doc(db, taskDocPath), { completed: false }).catch(err => console.error("Failed to reset task:", err));
+                   task.completed = false;
+                   modified = true;
                 }
             });
+
+            if (modified) {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
         };
 
         // --- Logika Filter & Tampilan Tugas ---
@@ -714,7 +636,7 @@
         todoListContainer.addEventListener('click', (e) => { 
             const taskElement = e.target.closest('.task-item'); 
             if (!taskElement) return; 
-            const taskId = taskElement.dataset.id; 
+            const taskId = Number(taskElement.dataset.id); 
             if (e.target.closest('input[type="checkbox"]')) { toggleTask(taskId); } 
             if (e.target.closest('.delete-btn')) { deleteTask(taskId); } 
             if (e.target.closest('.notes-btn')) { openNotesModal(taskId); } 
@@ -911,13 +833,11 @@
             editTaskModalOverlay.classList.add('hidden');
         };
         
-        editTaskForm.addEventListener('submit', async (e) => {
+        editTaskForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const taskId = editTaskIdInput.value;
-            if (!userId || !taskId) return;
-
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const taskDocPath = `/artifacts/${appId}/users/${userId}/tasks/${taskId}`;
+            const taskId = Number(editTaskIdInput.value);
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex === -1) return;
             
             const deadlineDate = document.getElementById('edit-deadline-date-input').value;
             const deadlineTime = document.getElementById('edit-deadline-time-input').value;
@@ -926,25 +846,18 @@
                 deadline = new Date(`${deadlineDate}T${deadlineTime || '23:59:59'}`).toISOString();
             }
             
-            const updatedData = {
-                text: document.getElementById('edit-task-input').value.trim(),
-                duration: parseInt(document.getElementById('edit-duration-input').value),
-                category: document.getElementById('edit-category-input').value.trim(),
-                priority: document.getElementById('edit-priority-input').value,
-                repeat: document.getElementById('edit-repeat-input').value,
-                deadline: deadline,
-            };
+            tasks[taskIndex].text = document.getElementById('edit-task-input').value.trim();
+            tasks[taskIndex].duration = parseInt(document.getElementById('edit-duration-input').value);
+            tasks[taskIndex].category = document.getElementById('edit-category-input').value.trim();
+            tasks[taskIndex].priority = document.getElementById('edit-priority-input').value;
+            tasks[taskIndex].repeat = document.getElementById('edit-repeat-input').value;
+            tasks[taskIndex].deadline = deadline;
             
-            try {
-                await updateDoc(doc(db, taskDocPath), updatedData);
-                showToast("Tugas berhasil diperbarui!");
-                closeEditTaskModal();
-                if (isRundownGenerated) {
-                    generateRundown();
-                }
-            } catch (error) {
-                console.error("Error updating task: ", error);
-                showToast("Gagal memperbarui tugas.");
+            saveTasks();
+            showToast("Tugas berhasil diperbarui!");
+            closeEditTaskModal();
+            if (isRundownGenerated) {
+                generateRundown();
             }
         });
 
@@ -957,7 +870,7 @@
         rundownOutput.addEventListener('click', (e) => { 
             const focusBtn = e.target.closest('.focus-btn'); 
             if (focusBtn) { 
-                const taskId = focusBtn.dataset.taskId; 
+                const taskId = Number(focusBtn.dataset.taskId); 
                 const duration = Number(focusBtn.dataset.duration); 
                 const task = tasks.find(t => t.id === taskId); 
                 if (task) startFocusTimer(duration, task.text); 
@@ -965,13 +878,13 @@
             
             const completeBtn = e.target.closest('.complete-btn-rundown'); 
             if(completeBtn) { 
-                const taskId = completeBtn.dataset.taskId; 
+                const taskId = Number(completeBtn.dataset.taskId); 
                 toggleTask(taskId); 
             }
 
             const editBtn = e.target.closest('.edit-rundown-task-btn');
             if (editBtn) {
-                const taskId = editBtn.dataset.taskId;
+                const taskId = Number(editBtn.dataset.taskId);
                 openEditTaskModal(taskId);
             }
 
@@ -1001,7 +914,7 @@
         rundownOutput.addEventListener('dragstart', (e) => {
             const item = e.target.closest('.rundown-task-item');
             if (item) {
-                draggedTaskId = item.dataset.taskId;
+                draggedTaskId = Number(item.dataset.taskId);
                 setTimeout(() => { item.classList.add('dragging'); }, 0);
             }
         });
@@ -1024,10 +937,11 @@
             const draggingItem = rundownOutput.querySelector('.dragging');
             if (draggingItem) draggingItem.classList.remove('dragging');
             
-            if (!targetItem || !draggedTaskId || targetItem.dataset.taskId === draggedTaskId) return;
+            const targetId = targetItem ? Number(targetItem.dataset.taskId) : null;
+            if (!targetItem || !draggedTaskId || targetId === draggedTaskId) return;
             
             const draggedIndex = tasksToSchedule.findIndex(t => t.id === draggedTaskId);
-            const targetIndex = tasksToSchedule.findIndex(t => t.id === targetItem.dataset.taskId);
+            const targetIndex = tasksToSchedule.findIndex(t => t.id === targetId);
             
             if (draggedIndex > -1 && targetIndex > -1) {
                 const [draggedItem] = tasksToSchedule.splice(draggedIndex, 1);
@@ -1043,6 +957,7 @@
         
         // --- Inisialisasi Aplikasi ---
         showMotivationalQuote();
+        checkRepeatingTasks();
         updateThemeUI(document.documentElement.classList.contains('dark'));
 
         rundownDateInput.value = new Date().toISOString().slice(0, 10);
@@ -1052,7 +967,7 @@
         showQuickFormBtn.classList.add('hidden');
         showDetailedFormBtn.classList.remove('hidden');
 
-        setupFirebase();
+        renderAll();
     });
     </script>
 </body>
